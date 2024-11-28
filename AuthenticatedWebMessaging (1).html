@@ -1,0 +1,88 @@
+<html>
+
+<body>
+    <style>
+        .button {
+            background-color: #04AA6D;
+            /* Green */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            transition-duration: 0.1s;
+        }
+
+        .button:hover {
+            background-color: #097d52;
+            /* Green */
+            color: white;
+        }
+    </style>
+    <script type="text/javascript" charset="utf-8">
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const code = urlParams.get('code')
+        console.log("Success getting code", code);
+        (function (g, e, n, es, ys) {
+            g['_genesysJs'] = e;
+            g[e] = g[e] || function () {
+                (g[e].q = g[e].q || []).push(arguments)
+            };
+            g[e].t = 1 * new Date();
+            g[e].c = es;
+            ys = document.createElement('script'); ys.async = 1; ys.src = n; ys.charset = 'utf-8'; document.head.appendChild(ys);
+        })(window, 'Genesys', 'https://apps.mypurecloud.com.au/genesys-bootstrap/genesys.min.js', {
+            environment: 'prod-apse2',
+            deploymentId: '<REPLACE_DEPLOYMENT_ID>'
+        });
+        Genesys("registerPlugin", "AuthProvider", function (AuthProvider) {
+
+            AuthProvider.registerCommand("getAuthCode", function (e) {
+                e.resolve({
+                    authCode: code,
+                    redirectUri: "http://localhost:3000/callback"
+                });
+            });
+            AuthProvider.registerCommand('reAuthenticate', (e) => {
+                e.resolve();
+            });
+
+            AuthProvider.subscribe("Auth.authError", function (e) {
+                console.log("Authentication Error: ", e);
+            });
+
+            AuthProvider.subscribe("Auth.loggedOut", function (e) {
+                console.log("Authentication logged out: ", e);
+            });
+
+            AuthProvider.subscribe("Auth.authenticated", function (e) {
+                console.log("Authentication: ", e);
+            });
+
+            AuthProvider.ready();
+        });
+
+        //Auth0 redirect for login
+        function login() {
+            window.location.replace("https://dev-rtsdfwtg62km32yv.us.auth0.com/authorize?client_id=<REPLACE_AUTHO_CLIENTID>&redirect_uri=<REPLACE_CALLBACK_URL>&response_type=code&state=369430729d5f8eecc408c11306a930909dfe55c9");
+
+        }
+        //Auth0 User logout
+        function logout() {
+            Genesys("command", "Auth.logout")
+        }
+    </script>
+
+    <h1 style="text-align: center;">MP Authenticated web Messaging</h1>
+    <br>
+    <br>
+
+    <button class="button" onclick="login()">Login</button>
+    <button class="button" onclick="logout()">Logout</button>
+
+</body>
+
+</html>
